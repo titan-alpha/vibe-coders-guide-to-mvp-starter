@@ -1,0 +1,79 @@
+@import "tailwindcss";
+@plugin "daisyui" {
+  themes: light --default, dark --prefersdark;
+}
+
+/* ---------------------------------------------------------------
+ * Override the default DaisyUI themes with your project palette.
+ * The agent will replace these with a tailored theme in sub-skill 02-design.
+ * -------------------------------------------------------------- */
+@plugin "daisyui/theme" {
+  name: "light";
+  default: true;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-base-100: oklch(99% 0.003 260);
+  --color-base-200: oklch(96% 0.005 260);
+  --color-base-300: oklch(92% 0.008 260);
+  --color-base-content: oklch(22% 0.02 260);
+
+  --color-primary: oklch(55% 0.18 250);
+  --color-primary-content: oklch(98% 0.003 260);
+  --color-secondary: oklch(70% 0.14 200);
+  --color-secondary-content: oklch(15% 0.02 200);
+  --color-accent: oklch(72% 0.15 150);
+  --color-accent-content: oklch(18% 0.03 150);
+  --color-neutral: oklch(25% 0.02 260);
+  --color-neutral-content: oklch(95% 0.005 260);
+  --color-info: oklch(70% 0.15 230);
+  --color-info-content: oklch(15% 0.03 230);
+  --color-success: oklch(72% 0.18 155);
+  --color-success-content: oklch(15% 0.03 155);
+  --color-warning: oklch(80% 0.18 75);
+  --color-warning-content: oklch(20% 0.05 75);
+  --color-error: oklch(65% 0.22 25);
+  --color-error-content: oklch(98% 0.003 25);
+
+  --radius-selector: 0.75rem;
+  --radius-field: 0.5rem;
+  --radius-box: 1rem;
+}
+
+@plugin "daisyui/theme" {
+  name: "dark";
+  prefersdark: true;
+  color-scheme: dark;
+
+  --color-base-100: oklch(18% 0.02 260);
+  --color-base-200: oklch(22% 0.025 260);
+  --color-base-300: oklch(26% 0.03 260);
+  --color-base-content: oklch(94% 0.005 260);
+
+  --color-primary: oklch(70% 0.18 250);
+  --color-primary-content: oklch(15% 0.02 250);
+  --color-secondary: oklch(76% 0.14 200);
+  --color-secondary-content: oklch(15% 0.02 200);
+  --color-accent: oklch(78% 0.15 150);
+  --color-accent-content: oklch(15% 0.03 150);
+  --color-neutral: oklch(22% 0.02 260);
+  --color-neutral-content: oklch(95% 0.005 260);
+  --color-info: oklch(75% 0.15 230);
+  --color-info-content: oklch(15% 0.03 230);
+  --color-success: oklch(78% 0.18 155);
+  --color-success-content: oklch(15% 0.03 155);
+  --color-warning: oklch(82% 0.18 75);
+  --color-warning-content: oklch(20% 0.05 75);
+  --color-error: oklch(70% 0.22 25);
+  --color-error-content: oklch(98% 0.003 25);
+
+  --radius-selector: 0.75rem;
+  --radius-field: 0.5rem;
+  --radius-box: 1rem;
+}
+
+html, body { height: 100%; }
+body {
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}

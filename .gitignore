@@ -1,0 +1,26 @@
+node_modules
+.next
+.vercel
+.turbo
+dist
+out
+
+# Env
+.env
+.env.local
+.env*.local
+
+# DB
+local.db
+local.db-journal
+*.sqlite
+*.sqlite-journal
+
+# Build artifacts
+public/search-index.json
+playwright-report
+test-results
+
+# System
+.DS_Store
+*.log

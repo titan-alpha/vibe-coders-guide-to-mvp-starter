@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Placeholder mark — the agent replaces this in sub-skill 02-design with a
+       tailored logo based on your project's concept. -->
+  <circle cx="32" cy="32" r="18" fill="none" stroke="currentColor" stroke-width="4" />
+  <circle cx="32" cy="32" r="6" fill="currentColor" />
+</svg>
