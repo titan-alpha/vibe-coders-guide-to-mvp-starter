@@ -4,13 +4,34 @@ Goal: get the right AI capability into the product without lock-in or runaway co
 
 ## DIALOGUE — figure out what kind of AI fits
 
-Frame the choice for the user with three paths. Pick one based on their answer.
+Frame the choice for the user with **four** paths. Pick one based on their answer.
 
-1. **"I want to brainstorm."** — Ask about their product, audience, and the friction points they want to remove. Then suggest 2&ndash;3 concrete AI features that would meaningfully improve the MVP &mdash; e.g., draft generation, classification, summarization, conversational assist, smart search, content moderation. Pick one to build in v1.
+1. **"I want to brainstorm."** — Ask about their product, audience, and the friction points they want to remove. Then suggest 2&ndash;3 concrete AI features that would meaningfully improve the MVP &mdash; e.g., draft generation, classification, summarization, conversational assist, smart search. Pick one to build in v1.
 2. **"I already have an idea."** — Ask three things: what the AI does, what input it gets, what the user expects to see. Confirm scope is achievable in v1: one feature, one schema, one prompt.
 3. **"You decide."** — Re-read `PROJECT.md` (audience, MVP slice). Propose the single AI feature you'd build and why. Confirm before building.
+4. **"Find me a unique angle that helps with fundraising."** — Run the *uniqueness research* below and propose an AI integration no competitor has shipped yet, framed for VC investability.
 
 If the product genuinely doesn't need AI, say so plainly and move on. Don't bolt AI on for novelty &mdash; an MVP without AI is a perfectly good MVP.
+
+## AUTONOMOUS — uniqueness research (path 4, or whenever investability matters)
+
+Before building, do this when the user wants their AI feature to stand out for fundraising:
+
+1. Re-read `PROJECT.md` &mdash; audience, MVP slice, competitive landscape from sub-skill 01.
+2. **Web-search the product category**. Look at the top 5&ndash;10 competitors. List the AI features each already has (e.g., "auto-summary", "smart search", "agent that drafts X").
+3. **Identify the gap.** Find one or two AI integrations that:
+   - solve a real problem for the audience,
+   - have not been shipped by any competitor you found,
+   - are achievable at MVP scale (single feature, single schema, &lt; 1 day of work),
+   - make sense for the product type (not "AI for AI's sake").
+4. **Validate.** Search again specifically for the candidate. If a startup has shipped it, it's not unique &mdash; iterate.
+5. **Surface to the user with the VC angle:**
+
+> *"AI investability is one of the strongest fundraising tailwinds right now &mdash; venture capital is paying close attention to products with unique AI integrations. Based on what's already in your space, I'd suggest **\<feature\>**, because **\<reason\>** &mdash; and from my research, no one in **\<category\>** is doing this yet. Building this gives you a clear story for investors. Want me to build it as your AI feature?"*
+
+Confirm before building. If the user prefers a more conventional feature (path 1&ndash;3), defer to them.
+
+Note this candidate in `PROJECT.md` under `# Decisions` along with the competitors checked &mdash; it's a useful artifact when pitching.
 
 ## AUTONOMOUS — set up the templated stack
 
@@ -125,9 +146,60 @@ Build the smallest UI that exposes the feature. Show a loading state. On error, 
 
 ### 6. Cost & abuse guardrails
 
-- Rate-limit any public-facing AI route per IP and per user (sub-skill 09 covers headers + rate limits).
+- Rate-limit any public-facing AI route per IP and per user (sub-skill 10 covers headers + rate limits).
 - For features users could spam, require auth.
 - Log token counts and model used. Even a single line per call helps the founder watch spend.
+
+## Content moderation (community-based products only)
+
+If users can post content that other users see &mdash; comments, posts, profile bios, messages, reviews, anything user-generated that's publicly readable &mdash; wire **OpenAI's moderation API** to filter harmful content automatically. It's **free** (no per-call cost), uses your existing `OPENAI_API_KEY`, and catches the well-known categories: hate, harassment, self-harm, sexual, violence, illicit.
+
+### When to add it
+
+DIALOGUE: *"Does your product let users post content that other users will see (comments, messages, profiles, posts, etc.)?"* If yes, wire it. If no, skip.
+
+### Helper
+
+```ts
+// lib/moderation.ts
+import 'server-only';
+import OpenAI from 'openai';
+const client = new OpenAI();
+
+export async function moderate(text: string): Promise<{
+  flagged: boolean;
+  categories: string[];
+}> {
+  const res = await client.moderations.create({
+    model: 'omni-moderation-latest',
+    input: text,
+  });
+  const result = res.results[0];
+  return {
+    flagged: result.flagged,
+    categories: Object.entries(result.categories)
+      .filter(([, v]) => v)
+      .map(([k]) => k),
+  };
+}
+```
+
+### Usage
+
+Wrap every endpoint that accepts user-generated content:
+```ts
+const { flagged } = await moderate(input.body);
+if (flagged) {
+  return Response.json(
+    { error: "We can't post this. It looks like it may contain harmful content." },
+    { status: 422 },
+  );
+}
+```
+
+User-facing message stays generic and friendly. Don't surface raw category names &mdash; they tend to be more inflammatory than the original content. Log the categories server-side so admins can see patterns.
+
+For images, use `'omni-moderation-latest'` with a multimodal input (URL or base64). For audio/video, transcribe first then moderate the text.
 
 ## Anti-patterns to avoid
 

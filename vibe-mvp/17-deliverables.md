@@ -1,4 +1,4 @@
-# 15 · Deliverables
+# 17 · Deliverables
 
 Goal: with the MVP shipped, produce the founder-facing **documents** that package the product for humans &mdash; investors, early customers, press, and the founder's own reference shelf. Every deliverable lands in `deliverables/` at the project root, and Finder is opened on completion so the user sees the stack of finished work.
 

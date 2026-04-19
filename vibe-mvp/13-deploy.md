@@ -1,4 +1,4 @@
-# 11 · Deploy
+# 13 · Deploy
 
 Goal: get the MVP live on the internet, under an account the user controls, with the agent doing as much of the work as possible. **Check for an existing deployment first &mdash; don't force the user to move to Vercel if they're already somewhere that works.**
 
@@ -94,7 +94,7 @@ Go with **Vercel**. It's the cheapest, fastest, and most agent-friendly for MVP-
 
 > *"For the Vercel signup and token flow, want me to drive a Chrome window? I'll open each page; you just sign in and click 'Create Token' where I pause &mdash; I handle the navigation."*
 
-If yes, use the Playwright headed-mode script (identical pattern to sub-skill 12 and 13 &mdash; open `https://vercel.com/login`, pause for sign-in, navigate to `https://vercel.com/account/tokens`, pause while the user creates + copies the token, then read it from stdin).
+If yes, use the Playwright headed-mode script (identical pattern to sub-skill 14 and 15 &mdash; open `https://vercel.com/login`, pause for sign-in, navigate to `https://vercel.com/account/tokens`, pause while the user creates + copies the token, then read it from stdin).
 
 Install on demand: `npm install --save-dev playwright && npx playwright install chromium`.
 
@@ -158,4 +158,4 @@ Capture the production URL.
 - A `# Deploy` section in `PROJECT.md` records: platform, production URL, GitHub repo URL, project/app name, and the redeploy command.
 - The user has the production URL in their hands.
 
-Move on to `12-domain.md`.
+Move on to `14-domain.md`.

@@ -80,7 +80,7 @@ Make the small changes you proposed. Keep the diff focused &mdash; this is a met
 
 The admin dashboard is for the **founder only**, not regular users. Don't tie it to the user-account system &mdash; gate it with a dedicated password the founder picks. This works even before sub-skill 03 (auth) is wired and stays simple as the project grows.
 
-Add to `.env.local` and to Vercel env (sub-skill 11):
+Add to `.env.local` and to Vercel env (sub-skill 13):
 ```
 ADMIN_PASSWORD=<long random string>     # generate with: openssl rand -base64 32
 ```
@@ -183,4 +183,4 @@ Don't add an "Admin" link to the public nav. The founder bookmarks `/admin` them
 - 4&ndash;6 KPIs render with real data.
 - Any new instrumentation is documented under `# Decisions` in `PROJECT.md`.
 
-Move on to `07-compliance.md`.
+Move on to `07-monetization.md`.

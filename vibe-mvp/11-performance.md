@@ -1,4 +1,4 @@
-# 10 · Performance
+# 11 · Performance
 
 Goal: Lighthouse ≥ 90 on Performance, Accessibility, Best Practices, and SEO. The MVP loads fast on a mid-tier phone on 4G.
 
@@ -42,4 +42,4 @@ Tell the user:
 - Lighthouse mobile scores: Performance ≥ 90, Accessibility ≥ 95, Best Practices ≥ 95, SEO ≥ 90.
 - A `# Performance` line in `PROJECT.md` records the final scores.
 
-Move on to `11-deploy.md`.
+Move on to `12-data-optimization.md`.

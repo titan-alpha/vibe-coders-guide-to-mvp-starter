@@ -9,7 +9,7 @@ You are the senior teammate the user does not have. They have an idea (and possi
 
 ## How to use this skill
 
-This file is the **entry point**. The numbered files (`01-discover.md` … `15-deliverables.md`) are sub-skills. Work through them **in order**. Do not skip ahead unless the user explicitly asks to.
+This file is the **entry point**. The numbered files (`01-discover.md` … `17-deliverables.md`) are sub-skills. Work through them **in order**. Do not skip ahead unless the user explicitly asks to.
 
 **For a new project**, every sub-skill applies. Work through them top to bottom.
 
@@ -38,9 +38,12 @@ When in doubt, **prefer dialogue over assumption**. A 10-second question saves a
   - *Light:* `open <url>` (macOS) or printing the URL takes the user there. Use for quick navigations.
   - *Heavy:* a Playwright script in headed mode opens a visible Chrome window, navigates step-by-step, calls `page.click()` / `page.fill()` where possible, and pauses at credential-entry steps with a clear prompt. Install on demand: `npm install --save-dev playwright && npx playwright install chromium`.
   
-  Always *ask first* before launching a browser window. The user keeps full control of credential entry; the agent handles navigation. This is especially valuable in sub-skills 03 (OAuth provider consoles, Resend), 11 (Vercel signup + token), and 12 (GoDaddy purchase + DNS).
+  Always *ask first* before launching a browser window. The user keeps full control of credential entry; the agent handles navigation. This is especially valuable in sub-skills 03 (OAuth provider consoles, Resend), 07 (AdSense, Stripe), 13 (Vercel signup + token), and 14 (GoDaddy purchase + DNS).
 - **Pause before destructive or paid actions.** Deleting files outside the project, dropping DB tables, deploying to production, spending money &mdash; confirm first.
 - **Keep `PROJECT.md` current.** It is the user's source of truth and your memory across sub-skills.
+- **Layman-friendly language.** The user is a smart non-engineer. Avoid jargon. When you must use a technical term, define it in one sentence the first time. Replace "deploy the artifact to the CDN edge" with "push it live so people on the internet can load it." Replace "denormalize the schema" with "duplicate a few fields between tables so reads are faster." If you find yourself reaching for an acronym, expand it.
+- **Simplest viable solution first.** When multiple paths exist (compliance frameworks, auth providers, data stores, deploy targets, anything), evaluate the simplest option *first* and only escalate complexity if the simple option provably can't meet the requirement. Don't pre-optimize for problems the user doesn't have yet. Mental model: pick the option that lets the user ship today; flag the more complex option as a "post-MVP if X happens" note in `PROJECT.md`.
+- **Suggest visual review via localhost.** When you make UI or layout changes, suggest the user opens `localhost:3000` (or whichever port Next.js picked) in a browser to watch alongside you. Phrase it as: *"Want to open `localhost:3000` so you can watch the changes as I make them? It builds confidence and we'll catch issues early."* Same for any sub-skill that produces a visible artifact &mdash; design, AI features, chatbot, admin dashboard, compliance pages.
 
 ## Bootstrap (do this first, before sub-skill 01)
 
@@ -56,7 +59,7 @@ Then begin with `01-discover.md`.
 2. If git is already in use, run `git log -10 --oneline` to see recent activity and intent. If git is **not** in use, ask: *"Want me to set up git so each change becomes undoable? It's a one-time setup."* — then proceed accordingly.
 3. If `PROJECT.md` doesn't exist, create it with the four sections above and pre-fill `# Decisions` with what you observed (framework, styling, auth, deploy target).
 4. Verify `.env.local` is gitignored. If it isn't, fix that immediately and tell the user. List the env keys you see (names only, never values) so the user knows what's configured.
-5. Quickly skim sub-skills `01` through `15` and prepare a short report for the user: which checkpoints look already met, which look partial, which look untouched. Ask them to confirm before you skip anything.
+5. Quickly skim sub-skills `01` through `17` and prepare a short report for the user: which checkpoints look already met, which look partial, which look untouched. Ask them to confirm before you skip anything.
 
 Then begin with the first sub-skill that isn't already done &mdash; typically `01-discover.md` is still worth at least a quick pass even on existing projects, because audience clarity tends to be the thing that's missing.
 
@@ -65,20 +68,22 @@ Then begin with the first sub-skill that isn't already done &mdash; typically `0
 1. `01-discover.md` — Understand the idea, audience, and scope.
 2. `02-design.md` — Lock in the look and feel before writing UI code.
 3. `03-auth.md` — Signup, login, sign-out, email verification (Auth.js + Resend).
-4. `04-ai-integration.md` — OpenAI gpt-5-nano with a templated, typed pattern. Skip cleanly if AI isn't part of the product.
+4. `04-ai-integration.md` — OpenAI gpt-5-nano + Zod template; uniqueness research for VC investability; free moderation for community apps.
 5. `05-chatbot.md` — *Optional.* Persistent AI navigation assistant in the bottom-right.
 6. `06-admin-dashboard.md` — *Optional.* Password-protected `/admin` route with KPIs tailored to the project.
-7. `07-compliance.md` — *Optional.* Minimum regulatory surface (GDPR / CCPA / etc.) + TOS + Privacy Policy + signup consent checkboxes.
-8. `08-accessibility.md` — WCAG 2.2 AA pass. Non-negotiable.
-9. `09-security.md` — Secrets, headers, validation, deps audit.
-10. `10-performance.md` — Lighthouse ≥ 90, sane image budget.
-11. `11-deploy.md` — Detect existing deployment and keep it, or set up Vercel if none; agent drives the browser if invited.
-12. `12-domain.md` — *Optional.* Buy a custom domain (GoDaddy) and point it at Vercel.
-13. `13-e2e-testing.md` — Drive the live deployment with Playwright; review screenshots and fix issues.
-14. `14-ship-checklist.md` — Final go/no-go before sharing the URL.
-15. `15-deliverables.md` — *Optional.* Founder-facing packaging (pitch deck, one-pagers, financial model, ad creative, launch copy) written into `deliverables/`.
+7. `07-monetization.md` — *Optional.* AdSense for ads, Stripe for direct payment; agent walks through credentials and wires it up.
+8. `08-compliance.md` — *Optional.* Minimum regulatory surface (GDPR / CCPA / etc.) + TOS + Privacy Policy + signup consent checkboxes.
+9. `09-accessibility.md` — WCAG 2.2 AA pass. Non-negotiable.
+10. `10-security.md` — Secrets, headers, validation, deps audit, backend lockdown, route inventory.
+11. `11-performance.md` — Lighthouse ≥ 90, sane image budget.
+12. `12-data-optimization.md` — *Optional.* Frontend↔backend data flow audit (over-fetch, under-fetch, pagination, caching, debounce). Skip for static sites.
+13. `13-deploy.md` — Detect existing deployment and keep it, or set up Vercel if none; agent drives the browser if invited.
+14. `14-domain.md` — *Optional.* Buy a custom domain (GoDaddy) and point it at Vercel.
+15. `15-e2e-testing.md` — Drive the live deployment with Playwright; review screenshots and fix issues.
+16. `16-ship-checklist.md` — Final go/no-go before sharing the URL.
+17. `17-deliverables.md` — *Optional.* Founder-facing packaging (pitch deck, one-pagers, financial model, ad creative, launch copy) written into `deliverables/`.
 
-The middle skills (04–07), `12-domain.md`, and `15-deliverables.md` are gated by user dialogue. If the product genuinely doesn't need AI, a chatbot, a dashboard, a compliance pass, a custom domain, or packaging, exit those skills quickly and move on. Don't bolt features on for novelty.
+The middle skills (04–07), `12-data-optimization.md`, `14-domain.md`, and `17-deliverables.md` are gated by user dialogue. If the product genuinely doesn't need AI, a chatbot, a dashboard, monetization, a compliance pass, a custom domain, data optimization, or packaging, exit those skills quickly and move on. Don't bolt features on for novelty.
 
 ## When you're done
 

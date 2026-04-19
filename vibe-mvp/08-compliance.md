@@ -1,4 +1,4 @@
-# 07 · Regulatory Compliance
+# 08 · Regulatory Compliance
 
 Goal: identify the **minimum** compliance surface the product needs at beta, and implement exactly that. No more. Compliance is a floor, not a finish line &mdash; over-building it at MVP stage kills momentum.
 
@@ -8,7 +8,7 @@ This skill is optional, but nearly every product with user accounts, AI, or anal
 
 > *"Want me to do a quick compliance pass? I'll look at what your product collects, who uses it, and where they live &mdash; then tell you which regulations apply, and we'll build exactly the minimum that covers you. For a signup flow that means a Terms of Service, Privacy Policy, and agreement checkboxes. No more than that."*
 
-If the user declines, skip and move on to `08-accessibility.md`. (But note it in `# Open questions` in `PROJECT.md` &mdash; they'll want to revisit before any marketing push.)
+If the user declines, skip and move on to `09-accessibility.md`. (But note it in `# Open questions` in `PROJECT.md` &mdash; they'll want to revisit before any marketing push.)
 
 ## AUTONOMOUS — analyze the platform
 
@@ -78,6 +78,21 @@ Come back with a concrete, short proposal:
 
 Adjust based on the user's answer. If they're convinced a regulation doesn't apply, ask them to confirm in writing (so it's in the chat log).
 
+## DIALOGUE — gather the inputs the user owns
+
+Before drafting anything, **ask the user for the values the agent must not invent**. Use plain language:
+
+> *"Two quick things I need from you before I draft these:*
+> 1. *What's the canonical URL for the site? (e.g., `https://your-domain.com`. If we haven't deployed yet and there's no domain decision, give me a placeholder you'll edit later.)*
+> 2. *What email address should privacy and legal contacts go to? Common options:*
+>    - *A new alias like `privacy@your-domain.com` &mdash; cleaner long term, but you'll need to set it up at your domain provider.*
+>    - *Your existing personal/work email like `you@gmail.com` &mdash; lowest friction, fine for MVP.*
+>    *Either works. Which is easier for you to monitor?"*
+
+Capture both answers verbatim. Use them in every place the documents reference a URL or contact email. **Never assume `privacy@<domain>` &mdash; many founders prefer a personal address at MVP stage and dislike when an agent invents an alias they then have to set up just because the agent didn't ask.**
+
+If the user later wants to switch to a domain alias, that's a one-line edit they can make themselves.
+
 ## AUTONOMOUS — build the minimum surface
 
 ### 1. Terms of Service and Privacy Policy
@@ -100,7 +115,7 @@ Structure each document with headings that map to the obligations:
 - Who you share it with (list sub-processors by name: OpenAI, Resend, Vercel, Stripe if used)
 - Retention periods for each category
 - User rights (access, delete, export, correct, object, opt-out)
-- How to exercise those rights (email `privacy@<domain>`)
+- How to exercise those rights (use the email the user provided in the DIALOGUE step above &mdash; do not invent `privacy@<domain>`)
 - Cookies (list each; separate strictly-necessary from analytics/marketing)
 - International transfers (mention Standard Contractual Clauses if data leaves the EU)
 - Contact info, "last updated" date
@@ -155,7 +170,9 @@ These two endpoints cover "Right to Access" and "Right to Erasure" under GDPR an
 
 ### 5. Privacy contact
 
-Set up `privacy@<domain>` as a forwarding alias to the founder's inbox. For MVP, a single inbox is fine.
+Use the email address the user provided in the DIALOGUE step above. **Do not assume the user wants a `privacy@<domain>` alias** &mdash; many MVPs use the founder's existing inbox.
+
+If the user picked an alias (`privacy@<their-domain>`) and the domain is at GoDaddy/Namecheap/Cloudflare/etc., walk them through setting up email forwarding from that alias to their real inbox (most registrars include free forwarding). If they picked an existing email (e.g., `you@gmail.com`), nothing further to do.
 
 ### 6. Sub-processor DPAs
 
@@ -178,6 +195,7 @@ If you added non-essential cookies (analytics, marketing pixels), show a cookie 
 - **Bundling consents.** Don't put Terms, Privacy, and Marketing in one checkbox. Separate them.
 - **"Legitimate interest" as the default basis for everything.** Use it carefully for GDPR. Consent-based processing is easier to defend for analytics/marketing.
 - **Copying HIPAA without actually handling PHI.** If you're not in healthcare, don't claim HIPAA compliance &mdash; it sets a bar you don't meet and invites scrutiny.
+- **Inventing the canonical URL or contact email.** Always ask the user for these in the DIALOGUE step above. Never assume `privacy@<domain>` &mdash; many founders prefer their existing inbox at MVP stage.
 
 ## Exit criteria
 
@@ -186,7 +204,7 @@ If you added non-essential cookies (analytics, marketing pixels), show a cookie 
 - `user_consents` table captures each acceptance with version + timestamp.
 - Footer has Terms, Privacy, and "Do Not Sell or Share" links.
 - `/account/data` supports export and delete for authenticated users.
-- `privacy@<domain>` inbox exists and is monitored.
+- The privacy contact email the user provided is reachable and monitored.
 - A `# Compliance` section in `PROJECT.md` lists the regulations covered, the sub-processors with signed DPAs, and a note recommending a legal review before general availability.
 
-Move on to `08-accessibility.md`.
+Move on to `09-accessibility.md`.

@@ -1,4 +1,4 @@
-# 08 · Accessibility
+# 09 · Accessibility
 
 Goal: pass WCAG 2.2 AA on the MVP slice. This is not optional. Roughly 1 in 5 people has a disability that affects how they use software.
 
@@ -49,4 +49,4 @@ After the fixes, tell the user:
 - `prefers-reduced-motion` is respected.
 - A `# Accessibility` line in `PROJECT.md` records the audit date.
 
-Move on to `09-security.md`.
+Move on to `10-security.md`.

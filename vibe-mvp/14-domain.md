@@ -1,4 +1,4 @@
-# 12 · Domain
+# 14 · Domain
 
 Goal: get a real custom domain pointed at the Vercel deployment, instead of the `*.vercel.app` URL. Skip if the user is happy with the Vercel subdomain for now &mdash; this can always be done later.
 
@@ -6,7 +6,7 @@ Goal: get a real custom domain pointed at the Vercel deployment, instead of the 
 
 > *"Want to put this on a real domain (e.g., `your-thing.com`) instead of the `*.vercel.app` URL? Costs about $10&ndash;$15/year and takes ~10 minutes. Or we can skip and you can add one later."*
 
-If no, skip and move on to `13-e2e-testing.md`.
+If no, skip and move on to `15-e2e-testing.md`.
 
 If yes, **suggest 3&ndash;5 candidate names** based on `PROJECT.md`. Make them short (≤ 14 chars), brand-able, and avoid hyphens or numbers. Examples for a "garden journal" app: `tendr.app`, `growlog.co`, `plantnote.com`. Suggest both `.com` (default) and one alternative TLD per name (`.app`, `.io`, `.co`). Tell the user to use a domain checker to confirm availability.
 
@@ -21,7 +21,7 @@ If yes, follow **Browser-driven path**. If no, follow **Manual walk-through**. B
 ## Browser-driven path
 
 ```bash
-npx playwright install chromium  # if not already done in sub-skill 11
+npx playwright install chromium  # if not already done in sub-skill 13
 ```
 
 ```ts
@@ -125,4 +125,4 @@ To stop sending from `onboarding@resend.dev`:
 - All hardcoded URLs and OAuth redirect URIs are updated.
 - A `# Domain` line in `PROJECT.md` records the registrar, domain, and renewal date.
 
-Move on to `13-e2e-testing.md`.
+Move on to `15-e2e-testing.md`.

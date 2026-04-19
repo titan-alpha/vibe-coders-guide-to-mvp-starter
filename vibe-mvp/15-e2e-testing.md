@@ -1,4 +1,4 @@
-# 13 · E2E Testing
+# 15 · E2E Testing
 
 Goal: drive the live MVP end-to-end with a real browser, capture screenshots of every key view, and visually inspect those screenshots for design or alignment issues. Make final fixes before ship.
 
@@ -122,4 +122,4 @@ Map this to whatever the project actually has:
 - Any issues found have been fixed and re-verified.
 - A `# E2E` section in `PROJECT.md` lists the tested flows and the date of the last clean run.
 
-Move on to `14-ship-checklist.md`.
+Move on to `16-ship-checklist.md`.

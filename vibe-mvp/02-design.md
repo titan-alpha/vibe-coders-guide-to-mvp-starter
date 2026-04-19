@@ -66,7 +66,7 @@ Goal: lock in a visual direction *before* writing UI components. Re-skinning lat
 
     **Footer (everything discoverable but non-essential):**
     - About, Contact (or a `/contact` form, or just `hello@<domain>`).
-    - Terms, Privacy, "Do Not Sell or Share" (from sub-skill 07 if applicable).
+    - Terms, Privacy, "Do Not Sell or Share" (from sub-skill 08 if applicable).
     - Social links (optional, and only if the brand has a real social presence).
     - Docs, changelog, press (only if they exist).
     - Copyright line.

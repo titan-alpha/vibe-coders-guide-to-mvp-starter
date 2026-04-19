@@ -61,7 +61,7 @@ RESEND_API_KEY=re_...
 EMAIL_FROM="App <onboarding@resend.dev>"
 ```
 
-`onboarding@resend.dev` is Resend's shared sender that works immediately without verifying a domain. For production, the user should add their own domain in Resend (DNS records: SPF, DKIM, MX) and switch `EMAIL_FROM` to `noreply@<their-domain>`. That's a sub-skill 12 (domain) follow-up.
+`onboarding@resend.dev` is Resend's shared sender that works immediately without verifying a domain. For production, the user should add their own domain in Resend (DNS records: SPF, DKIM, MX) and switch `EMAIL_FROM` to `noreply@<their-domain>`. That's a sub-skill 14 (domain) follow-up.
 
 Install:
 ```bash
