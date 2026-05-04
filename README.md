@@ -1,22 +1,21 @@
 # Vibe MVP Starter
 
 A Next.js 15 + TypeScript + Tailwind v4 + DaisyUI starter with every feature
-pre-scaffolded and env-var toggleable. **The Vibe Coder's Guide to MVP skill
-bundle ships inside this project** at `./vibe-mvp/` — your agent reads
-[`./vibe-mvp/SKILL.md`](./vibe-mvp/SKILL.md) to work through discover → design →
-auth → AI → compliance → accessibility → security → performance → deploy → domain →
-e2e → ship → deliverables.
+pre-scaffolded and runtime-toggleable via DB-backed feature flags. **The Vibe
+Coder's Guide to MVP skill bundle ships inside this project** at `./vibe-mvp/`.
 
-## Point your agent here first
+## Quick start (one-line copy/paste)
+
+Paste this into your AI coding agent (Claude Code, Codex, Cursor, …):
 
 ```
-./vibe-mvp/SKILL.md
+Help me ship an MVP. Bootstrap from https://github.com/titan-alpha/vibe-coders-guide-to-mvp-starter — read AGENTS.md and follow it strictly.
 ```
 
-That's the entry point. The agent starts there, then walks the numbered
-sub-skills in order. Have it copy `vibe-mvp/` into `.claude/skills/vibe-mvp/`
-(for Claude Code) or `.codex/skills/vibe-mvp/` (for Codex) so your agent
-platform auto-loads it.
+The agent reads [`AGENTS.md`](./AGENTS.md) (bootstrap protocol) and
+[`./vibe-mvp/SKILL.md`](./vibe-mvp/SKILL.md) (the methodology) and walks you
+from discover → design → auth → AI → compliance → accessibility → security →
+performance → deploy → domain → e2e → ship → deliverables.
 
 ## Stack
 
