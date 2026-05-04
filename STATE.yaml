@@ -1,0 +1,14 @@
+mode: null
+started: ""
+last_updated: ""
+project_name: ""
+public_url: ""
+skills: {}
+decisions:
+  use_git: true
+  notifications_enabled: false
+  feedback_enabled: false
+  cost_monitoring_enabled: false
+  error_alerts_enabled: false
+features: []
+ready: false

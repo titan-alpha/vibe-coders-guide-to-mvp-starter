@@ -57,7 +57,8 @@ export async function aiCall<S extends z.ZodTypeAny>(args: {
 }): Promise<z.infer<S>> {
   const res = await client().responses.parse({
     model: args.model ?? process.env.OPENAI_MODEL ?? 'gpt-5-nano',
-    reasoning: { effort: args.effort ?? 'minimal' },
+    // 'minimal' is supported by gpt-5 family but not yet typed in the SDK.
+    reasoning: { effort: (args.effort ?? 'minimal') as 'low' | 'medium' | 'high' },
     instructions: args.instructions,
     input: args.input,
     text: { format: zodTextFormat(args.schema, args.schemaName) },

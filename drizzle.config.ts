@@ -1,8 +1,7 @@
 import { defineConfig } from 'drizzle-kit';
 
 export default defineConfig({
-  dialect: 'sqlite',
-  driver: 'libsql',
+  dialect: 'turso',
   schema: './db/schema.ts',
   out: './db/migrations',
   dbCredentials: {

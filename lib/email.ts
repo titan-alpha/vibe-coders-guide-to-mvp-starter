@@ -22,6 +22,14 @@ function client(): Resend {
 
 const FROM = process.env.EMAIL_FROM ?? 'App <onboarding@resend.dev>';
 
+/**
+ * Whether email sending is configured. Callers can check this before queueing
+ * non-critical mail (e.g. alerts) to skip the call rather than throw.
+ */
+export function emailEnabled(): boolean {
+  return Boolean(process.env.RESEND_API_KEY);
+}
+
 export async function sendEmail(args: {
   to: string;
   subject: string;

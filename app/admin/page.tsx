@@ -1,67 +1,95 @@
-import { features } from '@/lib/features';
-import { notFound } from 'next/navigation';
-
-export const revalidate = 60;
-
 /**
- * Admin dashboard — password-gated by middleware.
+ * Admin Overview tab — KPI stat cards.
  *
- * Currently renders mock KPI cards. In sub-skill 06-admin-dashboard the agent:
- *  1. Analyzes the codebase to see what data is being captured.
- *  2. Proposes 4–6 tailored KPIs with rationale.
- *  3. Adds the minimum instrumentation needed (via lib/track.ts).
- *  4. Replaces the mock values below with real queries against the events table.
+ * Each card is gated by the relevant module flag. We batch all the
+ * count() queries with Promise.all so the page renders in one DB
+ * roundtrip per metric (and zero queries for cards whose flag is off).
+ *
+ * The wrapping `app/admin/layout.tsx` already enforces the master `admin`
+ * flag — so we trust it here and only check the per-module flags.
  */
-export default async function AdminPage() {
-  if (!features.admin) notFound();
 
-  // TODO: replace mock values with real queries once instrumentation lands.
-  const kpis = [
-    { label: 'DAU', value: '—', hint: 'Hook up events table' },
-    { label: 'Signups (7d)', value: '—', hint: 'Count users created in last 7d' },
-    { label: 'Activation rate', value: '—', hint: 'Define your aha event first' },
-    { label: 'AI calls (7d)', value: '—', hint: 'Log from lib/ai.ts' },
-  ];
+import { eq, gte, sql } from 'drizzle-orm';
+import { db } from '@/lib/db';
+import { users, feedback, alertEvents, notifications } from '@/db/schema';
+import { flags as readFlags } from '@/lib/feature-flag';
+
+export const dynamic = 'force-dynamic';
+
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+
+interface Card {
+  label: string;
+  value: string | number;
+  hint?: string;
+}
+
+export default async function AdminOverviewPage() {
+  const flags = await readFlags('auth', 'feedback', 'error_alerts', 'notifications');
+  const sevenDaysAgo = new Date(Date.now() - SEVEN_DAYS_MS);
+
+  const cards: Card[] = [];
+
+  if (flags.auth) {
+    const [{ count: total } = { count: 0 }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(users);
+    cards.push({ label: 'Users', value: total, hint: 'Total registered' });
+
+    const [{ count: recent } = { count: 0 }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(users)
+      .where(gte(users.createdAt, sevenDaysAgo));
+    cards.push({ label: 'New users (7d)', value: recent, hint: 'Created in last 7 days' });
+  }
+
+  if (flags.feedback) {
+    const [{ count: pending } = { count: 0 }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(feedback)
+      .where(eq(feedback.status, 'new'));
+    cards.push({ label: 'Feedback', value: pending, hint: 'Awaiting review' });
+  }
+
+  if (flags.error_alerts) {
+    const [{ count: openAlerts } = { count: 0 }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(alertEvents)
+      .where(eq(alertEvents.status, 'new'));
+    cards.push({ label: 'Alerts', value: openAlerts, hint: 'New alerts' });
+  }
+
+  if (flags.notifications) {
+    const [{ count: sent } = { count: 0 }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(notifications)
+      .where(gte(notifications.createdAt, sevenDaysAgo));
+    cards.push({ label: 'Notifications (7d)', value: sent, hint: 'Sent in last 7 days' });
+  }
 
   return (
-    <div className="max-w-6xl mx-auto p-6 sm:p-8 space-y-8">
-      <header>
-        <h1 className="text-3xl font-semibold tracking-tight">Admin</h1>
-        <p className="opacity-70 mt-1">
-          Password-gated via middleware. Replace these placeholders in sub-skill 06.
-        </p>
-      </header>
-
-      <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {kpis.map((k) => (
-          <div key={k.label} className="card bg-base-200 border border-base-300">
-            <div className="card-body p-5">
-              <div className="text-xs uppercase tracking-widest opacity-60">
-                {k.label}
-              </div>
-              <div className="text-3xl font-semibold mt-1">{k.value}</div>
-              <div className="text-sm opacity-60 mt-1">{k.hint}</div>
-            </div>
+    <section className="space-y-6">
+      {cards.length === 0 ? (
+        <div className="card bg-base-200 border border-base-300">
+          <div className="card-body">
+            <p className="opacity-70 text-sm">
+              No overview metrics available — enable the <code>auth</code>,{' '}
+              <code>feedback</code>, <code>error_alerts</code>, or{' '}
+              <code>notifications</code> flag to populate this page.
+            </p>
           </div>
-        ))}
-      </section>
-
-      <section className="card bg-base-200 border border-base-300">
-        <div className="card-body">
-          <h2 className="font-semibold">Next steps</h2>
-          <ol className="mt-2 space-y-1 text-sm opacity-80 list-decimal list-inside">
-            <li>
-              Open sub-skill 06-admin-dashboard in the vibe-mvp skill bundle.
-            </li>
-            <li>Let the agent audit your codebase and propose tailored KPIs.</li>
-            <li>
-              Add instrumentation (<code className="font-mono">lib/track.ts</code>) where
-              it&rsquo;s missing.
-            </li>
-            <li>Replace the cards above with real queries.</li>
-          </ol>
         </div>
-      </section>
-    </div>
+      ) : (
+        <div className="stats stats-vertical sm:stats-horizontal shadow w-full overflow-x-auto">
+          {cards.map((c) => (
+            <div key={c.label} className="stat">
+              <div className="stat-title">{c.label}</div>
+              <div className="stat-value text-2xl">{c.value}</div>
+              {c.hint && <div className="stat-desc">{c.hint}</div>}
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }

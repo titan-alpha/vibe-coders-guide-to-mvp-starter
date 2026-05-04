@@ -24,7 +24,7 @@ export async function track(name: string, properties?: Properties): Promise<void
   try {
     const { db } = await import('@/lib/db');
     const { events } = await import('@/db/schema');
-    await db().insert(events).values({
+    await db.insert(events).values({
       id: randomUUID(),
       name,
       properties: properties ? (properties as unknown as string) : null,

@@ -1,12 +1,14 @@
 /**
- * Typed feature-flag reader.
+ * Legacy env-var feature reader — kept for backwards compatibility with
+ * older parts of the codebase that read `features.x` directly.
  *
- * Every optional surface of the app reads its on/off state from here.
- * Flags are set in .env.local via FEATURE_* env vars and default to `false`.
+ * **Prefer `flag(key, userId?)` from `@/lib/feature-flag`** for any new code.
+ * The DB-backed flag system supports runtime toggling, scheduled activation,
+ * percentage rollout, and the admin Features tab. The env-var system here
+ * does not.
  *
- * Usage (server or client — Next.js inlines NEXT_PUBLIC_ vars on client,
- * but here all reads happen on the server; client components receive flags
- * as props from their parent server component).
+ * This shim survives during the migration window. Once every site of use
+ * has moved to flag(), delete this file.
  */
 
 function on(name: string): boolean {
@@ -25,10 +27,6 @@ export const features = {
 
 export type Features = typeof features;
 
-/**
- * Throw with a helpful message if a required credential for a feature
- * is missing. Call at module init inside feature-specific files.
- */
 export function requireEnv(name: string, forFeature: keyof Features): string {
   const value = process.env[name];
   if (!value) {
