@@ -1,0 +1,175 @@
+# STATE.yaml — project progress source of truth.
+#
+# Lives at the project root (not in the skills directory). Read at session
+# start; updated after every sub-skill exits and whenever a decision is
+# locked. Bidirectional with the configurator UI: see modes.md and SKILL.md
+# for the mode-selection ritual.
+#
+# Update rules (for the agent):
+#   1. At session start: read this file before any tool call. Trust it.
+#   2. At sub-skill start: set skills.<id>.status to 'active'.
+#   3. At sub-skill exit: set status to 'completed' (or 'skipped'), append a
+#      one-line note, update relevant sections (decisions, env_keys, etc.),
+#      and bump last_updated.
+#   4. When the user changes a decision: append to decisions with the new
+#      value; the prior value is overwritten in place but the change is
+#      reflected in the configurator and visible in git history.
+#   5. When the user switches modes: append a row to mode_changes; reseed
+#      skills accordingly (configurator does this automatically).
+
+mode: null                    # quick-ship | content-site | beta-with-users | full-mvp | investor-ready
+started: ""                   # YYYY-MM-DD
+last_updated: ""              # ISO 8601
+project_name: ""              # working title
+public_url: ""                # *.vercel.app or custom domain, or "" if not deployed yet
+
+# ── Skill plan ────────────────────────────────────────────────────────
+# One key per skill the mode includes. Each entry has:
+#   status:      pending | active | completed | skipped
+#   note:        one-line summary of what was decided / shipped
+#   skip_reason: why this skill was skipped (only when status=skipped)
+skills: {}
+# Example:
+# skills:
+#   "01-discover":
+#     status: completed
+#     note: "Recipe app for casual home cooks 25-45; MVP slice = save+search 100 starter recipes"
+#   "08-analytics":
+#     status: skipped
+#     skip_reason: "deferred to post-launch when there's signal"
+
+# ── Locked decisions ──────────────────────────────────────────────────
+# Append-only conceptually — the agent overwrites in place but should never
+# delete a key, only update its value. The configurator writes here too.
+decisions:
+  # Discover (sub-skill 01)
+  idea: ""
+  audience: ""
+  mvp_slice: ""
+  access_model: ""             # open | waitlist | paid
+  use_git: true                # default; the agent will offer to git init in 01-discover bootstrap
+
+  # Design (sub-skill 02)
+  tone_label: ""               # editorial | tech | friendly | luxurious | playful | brutalist
+  display_font: ""             # e.g., "Inter Tight"
+  primary_color: ""            # hex, e.g., "#a855f7"
+  primary_color_oklch: ""      # OKLCH equivalent
+  notifications_enabled: false # adds bell icon to header + Notifications admin tab
+
+  # Auth (sub-skill 04)
+  auth_path: ""                # credentials | magic-link | oauth
+  oauth_providers: []          # subset of: Google, GitHub
+  email_service: ""            # resend | sendgrid | none
+  email_triggers: []           # approved triggers from the catalog in 04-auth
+
+  # Admin (sub-skill 07)
+  admin_tabs: []               # subset of: Overview, Users, Waitlist, Usage, Notifications, Analytics
+  initial_usage_grant: 0       # baked into every new user's usageGranted at signup
+
+  # Analytics (sub-skill 08)
+  analytics_scope: []          # subset of: investor, internal
+  analytics_tool: ""           # self-hosted | posthog | plausible
+  north_star: ""               # one-sentence definition
+
+  # Monetization (sub-skill 09)
+  monetization_path: ""        # none | adsense | stripe-saas | stripe-paid-beta
+  stripe_plans: []             # [{ name, amount_cents, interval: month|year|one_time }]
+
+  # Stack (set by sub-skill 02)
+  stack: ""                    # e.g., "Next.js 15 + Tailwind v4 + DaisyUI + Drizzle + Postgres (Neon)"
+
+  # Cost ceilings (sub-skill 11) — per-service monthly USD cap. Agent sets
+  # platform alerts to fire at 80% of each ceiling.
+  cost_ceilings:
+    openai: 0                  # USD/month; 0 = no ceiling configured yet
+    vercel: 0
+    resend: 0
+    stripe_processing: 0       # acceptable Stripe fee burn
+    neon: 0
+    sentry: 0
+
+  # Error-tracking + alerts (sub-skill 11 + 07)
+  error_alerts_enabled: false  # send email to founder on level >= warn
+  error_alerts_email: ""       # defaults to the auth-skill privacy contact
+
+  # Customer discovery (sub-skill 18)
+  discovery_done: false        # has the user already done customer discovery?
+  discovery_planned: false     # for investor-ready, did they commit to do it?
+
+  # Product category — set by sub-skill 01; agent loads patterns/<category>.md
+  product_category: ""         # marketplace | content-platform | dev-tool | saas-dashboard | community | productivity-tool
+
+  # Founder dogfooding (per the SKILL.md operating rule)
+  dogfooding_committed: false  # founder said "yes I'll use this every day"
+  dogfooding_notes: []         # [{ date: "...", note: "..." }] — appended via configurator Notes tab or chat
+  # Each note is read in sub-skill 18's improvement-cycle alongside discovery transcripts.
+
+  # Kill list — features the agent or user noticed aren't earning their place
+  kill_list_candidates: []     # [{ feature: "...", reason: "...", added_at: "..." }] — proposed for removal at ship-checklist
+
+  # AI safety guardrails applied (per the SKILL.md operating rule)
+  ai_safety_guardrails: []     # [{ feature: "ai-summary", guardrails: ["domain-disclaimer", "prompt-injection-filter", "ai-disclosure", "output-moderation"] }]
+
+  # Feature flags (sub-skill 13's feature_flags table; the Features admin tab edits these at runtime)
+  features: []                 # [{ key: "new_dashboard", enabled: false, rollout_pct: 0, scheduled_activation: null, description: "..." }]
+
+  # Data seeding (sub-skill 02)
+  seeding_plan: ""             # one-line description of what's seeded (e.g., "100 starter recipes, 0 users, 0 reviews")
+  seeded_at: ""                # date the seed ran
+
+  # Released versions (sub-skill 14, append-only)
+  released_versions: []        # [{ version: "0.3.0", date: "...", url: "..." }]
+
+# ── Versioned consent documents (sub-skill 03) ────────────────────────
+document_versions:
+  tos: ""                      # YYYY-MM-DD of last_updated in /terms
+  privacy: ""                  # YYYY-MM-DD of last_updated in /privacy
+
+# ── Env keys configured (names only — never values) ───────────────────
+env_keys: []
+# Example:
+# env_keys:
+#   - AUTH_SECRET
+#   - RESEND_API_KEY
+#   - EMAIL_FROM
+#   - ACCESS_MODE
+#   - INITIAL_USAGE_GRANT
+#   - ADMIN_PASSWORD_BOOTSTRAP
+
+# ── Sub-processors with signed DPAs (sub-skill 03) ────────────────────
+sub_processors: []
+# Example:
+# sub_processors:
+#   - { name: "OpenAI", dpa_signed: "2026-05-03" }
+#   - { name: "Resend", dpa_signed: "2026-05-03" }
+
+# ── Open questions / blockers ─────────────────────────────────────────
+open_questions: []
+
+# ── Mode change history ───────────────────────────────────────────────
+mode_changes: []
+# Example:
+# mode_changes:
+#   - { date: "2026-05-10", from: "quick-ship", to: "beta-with-users", reason: "MVP working; ready to invite testers" }
+
+# ── Build session — agent ↔ user channel via the configurator's Build tab ──
+# After hand-off (ready: true), the agent uses this stream to communicate
+# focused questions and status updates back to the user without making them
+# switch to a terminal. The user sees each entry in the configurator's "Build"
+# tab; their responses get written back into the same entry; the agent reads
+# them on its next polling cycle.
+#
+# Message schema and the canonical example for each type live in SKILL.md
+# under "Build channel protocol." This file just holds the live messages.
+build_session:
+  messages: []
+  # Set by the configurator when the user is viewing the Build tab.
+  user_active: false
+
+# ── Hand-off flag from the configurator ───────────────────────────────
+# When the user clicks "Hand off to the agent" in the configurator UI, this
+# becomes true. The agent should detect the change, summarize the locked
+# scope back to the user, suggest anything it thinks is missing (always as
+# a suggestion, not a requirement), then on confirmation build exactly what
+# the configurator captured.
+ready: false

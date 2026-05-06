@@ -1,4 +1,4 @@
-# 05 · Chatbot
+# 06 · Chatbot
 
 Goal: optionally add a persistent AI navigation assistant to the bottom-right of the site. It helps users find what they need by searching the site's content and answering with hyperlinks. Strictly opt-in &mdash; many MVPs don't need it.
 
@@ -307,4 +307,4 @@ export async function POST(req: Request) {
 - A test query returns a useful answer with at least one valid internal hyperlink.
 - A `# Chatbot` line in `PROJECT.md` notes which content is indexed and the per-message cost ceiling.
 
-Move on to `06-admin-dashboard.md`.
+Move on to `07-admin-dashboard.md`.

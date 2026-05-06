@@ -1,4 +1,4 @@
-# 14 · Domain
+# 15 · Domain
 
 Goal: get a real custom domain pointed at the Vercel deployment, instead of the `*.vercel.app` URL. Skip if the user is happy with the Vercel subdomain for now &mdash; this can always be done later.
 
@@ -125,4 +125,4 @@ To stop sending from `onboarding@resend.dev`:
 - All hardcoded URLs and OAuth redirect URIs are updated.
 - A `# Domain` line in `PROJECT.md` records the registrar, domain, and renewal date.
 
-Move on to `15-e2e-testing.md`.
+Move on to `16-e2e-testing.md`.

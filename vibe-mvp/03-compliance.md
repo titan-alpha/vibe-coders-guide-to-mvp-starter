@@ -1,20 +1,49 @@
-# 08 · Regulatory Compliance
+# 03 · Regulatory Compliance
 
 Goal: identify the **minimum** compliance surface the product needs at beta, and implement exactly that. No more. Compliance is a floor, not a finish line &mdash; over-building it at MVP stage kills momentum.
 
+This sub-skill runs **before auth** because the upcoming signup form's TOS / Privacy checkbox needs the documents to exist and to be linkable, and the consent record stores which version each user accepted.
+
 ## DIALOGUE — does the product want a compliance pass?
 
-This skill is optional, but nearly every product with user accounts, AI, or analytics needs *some* coverage before beta. Ask:
+For any project with auth (open signup, waitlist, or paid beta &mdash; the access model picked in sub-skill 01), this is **required**, not optional. For a strictly read-only static site with no signup, no analytics, and no cookies, you can skip; tell the user that and confirm before doing so.
 
-> *"Want me to do a quick compliance pass? I'll look at what your product collects, who uses it, and where they live &mdash; then tell you which regulations apply, and we'll build exactly the minimum that covers you. For a signup flow that means a Terms of Service, Privacy Policy, and agreement checkboxes. No more than that."*
+> *"I'll do a quick compliance pass now &mdash; before we wire up signup &mdash; so the Terms of Service and Privacy Policy are ready when the signup form needs to link to them. I'll look at what your product collects, who uses it, and where they live, then tell you which regulations apply, and we'll build exactly the minimum. Sound good?"*
 
-If the user declines, skip and move on to `09-accessibility.md`. (But note it in `# Open questions` in `PROJECT.md` &mdash; they'll want to revisit before any marketing push.)
+If the user has a strong reason to defer (e.g., they want to wireframe auth first to demo to a stakeholder), note it in `# Open questions` in `PROJECT.md` and tag sub-skill 04 as needing a compliance follow-up before public launch. Do not let auth ship without TOS/Privacy in any project that takes user signups.
 
 ## AUTONOMOUS — analyze the platform
 
 Before proposing anything, read what the product actually does. Build a compliance profile.
 
-### 1. What does the product collect?
+### 1. Identify the vertical and the framework that follows from it
+
+Read `PROJECT.md` `# Idea` and `# Audience`. Classify the platform along TWO axes: **B2C vs B2B**, and **"general" vs "regulated industry."**
+
+Match the classification against this framework table:
+
+| Classification | Frameworks the agent surfaces to the user |
+| --- | --- |
+| **B2C general** | GDPR (any EU user), CCPA/CPRA (any CA user), COPPA (any user under 13), state-level US privacy laws (VCDPA, CPA, UCPA, CTDPA &mdash; converging on GDPR-lite). |
+| **B2C regulated** | The B2C general set, **plus**: HIPAA (PHI / health data), FERPA (student records via an educational institution), GLBA (consumer financial data), state-licensed-practice laws (telehealth, insurance, legal, medical advice). |
+| **B2B (small business)** | GDPR / CCPA still apply if the buyer's end users live there. Light SOC 2 awareness &mdash; most small-biz buyers won't ask, but it's a leading indicator of moving up-market. |
+| **B2B Enterprise** | **SOC 2 Type II** (de-facto trust currency for selling into mid-market+ &mdash; required for most procurement). **ISO 27001** (international equivalent, common in EU + regulated buyers). HIPAA BAAs if any customer data could be PHI. PCI-DSS if payments flow through. Often a Vendor Security Questionnaire (VSQ) on first contract. |
+| **Any project taking payment** | PCI-DSS. Stripe Checkout drops you to SAQ A (easiest); rolling your own form makes you SAQ D. |
+| **AI features** | Sub-processor disclosure (OpenAI / Anthropic / etc. in the privacy policy + DPA). EU AI Act if you're in scope (high-risk uses: hiring, credit, education, biometrics, critical infra). Most MVPs are out of scope, but verify. |
+
+Then write a one-paragraph summary to the user using this script:
+
+> *"Based on what you described, this product is `<classification>`. The frameworks that likely apply: `<list>`. Here's what each means in plain English:*
+> - `<framework 1>`: *one-sentence summary + concrete consequence (e.g., "GDPR &mdash; you need a Privacy Policy with EU data subject rights and a contact path; max fine is 4% of global revenue, but realistically you'd get a takedown notice first").*
+> - `<framework 2>`: *...*
+>
+> *We don't have to implement all of these at MVP. But some choices we make in the next few skills (data storage, auth, sub-processors) are cheaper if we plan for them now. Want me to walk you through which ones to plan for?"*
+
+For the regulated-industry classification specifically, **explicitly raise the framework even if the user didn't mention it**. Example phrasing:
+
+> *"Your audience description mentions 'patient' and 'symptom log' &mdash; this is HIPAA territory. We need to talk about that before we go further: HIPAA significantly raises the bar (BAAs with every sub-processor, encryption at rest with audit logs, breach notification within 60 days, and a covered-entity vs business-associate determination). At MVP this is a real cost &mdash; sometimes founders pivot the value prop slightly to stay out of HIPAA scope (e.g., 'wellness tracking' is not regulated; 'medical record' is). Want to keep the original framing or scope down?"*
+
+### 2. What does the product collect?
 
 Walk the codebase and list every piece of user-identifiable or sensitive data:
 
@@ -26,9 +55,9 @@ Walk the codebase and list every piece of user-identifiable or sensitive data:
 - **Health / education / child data**: triggers HIPAA / FERPA / COPPA respectively.
 - **Cookies**: session cookies, third-party analytics, tracking pixels.
 
-Write the list to a scratch note. This is the input to step 3.
+Write the list to a scratch note. This is the input to step 4.
 
-### 2. Who uses it and where do they live?
+### 3. Who uses it and where do they live?
 
 Re-read `PROJECT.md` audience. Check the landing copy. Infer the likely geographic scope:
 
@@ -39,7 +68,7 @@ Re-read `PROJECT.md` audience. Check the landing copy. Infer the likely geograph
 - **Education data about students** &rarr; **FERPA** (US, if tied to an educational institution).
 - **Canada** &rarr; **PIPEDA**. **Brazil** &rarr; **LGPD**. Both closely mirror GDPR patterns.
 
-### 3. Research the specific obligations
+### 4. Research the specific obligations
 
 For each regulation that applies, list the concrete obligations at the MVP stage. Don't recite the whole law &mdash; list only what needs to ship.
 
@@ -53,8 +82,14 @@ Typical minimum surface:
 | **HIPAA** | BAA with every sub-processor that touches PHI (OpenAI has one behind Enterprise; Resend does not by default). Encryption at rest + in transit. Audit log of PHI access. This is rarely "minimum" &mdash; if HIPAA applies, it's a serious build. |
 | **FERPA** | Contractual terms with the educational institution; limit student PII disclosure. Usually project-specific. |
 | **PCI-DSS** | Use Stripe Checkout (or equivalent). Never let card data touch your server. If Checkout is used, you're on **SAQ A** (easiest level). |
+| **GLBA** | Privacy notice describing what financial data you collect + how it's shared. Safeguards Rule: written info-security plan, MFA on admin access, encryption of consumer data in transit + at rest. If you're not a "financial institution" by FTC definition, doesn't apply &mdash; the agent confirms. |
+| **SOC 2 Type II** | Not implementable at MVP. The agent's job here is **awareness**: the choices you make now (single-sign-on for admin, audit logs from day one, change-management discipline, encryption, access reviews) are all cheaper to do early than retrofit. Tag in `STATE.yaml # Decisions`: "SOC 2 awareness: agent shipped X / Y / Z foundational practices to keep the option open." |
+| **ISO 27001** | Same posture as SOC 2 &mdash; awareness now, certification later. Documenting the Information Security Management System (ISMS) is the long pole; small things to do now: maintain an asset inventory, document the risk-assessment approach in `PROJECT.md`. |
+| **State US privacy laws (VCDPA / CPA / UCPA / CTDPA)** | The Privacy Policy text written to cover GDPR + CCPA covers ~90% of these. Differences are mostly procedural (specific opt-out language, slightly different rights enumeration). One Privacy Policy, well-tailored, covers all of them. |
+| **EU AI Act** | If your AI features fall into "high risk" categories (hiring, credit scoring, education enrollment, biometrics, law enforcement) you need a conformity assessment. **Most MVPs are out of scope.** The agent confirms by checking the AI feature list against Annex III; if in scope, this is a serious build and the agent flags it as "post-MVP, before any high-risk launch." |
+| **PCI-DSS (any path)** | Stripe Checkout = SAQ A (12 controls, all on Stripe's side; you self-attest). Stripe Elements (you collect card data, Stripe tokenizes) = SAQ A-EP (~30 controls, mostly on you). Custom card form = SAQ D (~280 controls, full audit). **Always pick Checkout for MVP.** |
 
-### 4. Identify the gap
+### 5. Identify the gap
 
 For each obligation, check what's already in place. Most MVPs are missing:
 - Privacy Policy and Terms of Service (no one has written them yet)
@@ -77,6 +112,45 @@ Come back with a concrete, short proposal:
 > *Your platform doesn't need HIPAA, FERPA, or COPPA surface based on what it collects. Sound right?"*
 
 Adjust based on the user's answer. If they're convinced a regulation doesn't apply, ask them to confirm in writing (so it's in the chat log).
+
+## DIALOGUE — geographic compliance: comply or block
+
+GDPR and CCPA compliance is "free" for most MVPs &mdash; the policy text plus the consent checkboxes from sub-skill 04 cover most of it. But for some founders, even that minimal effort isn't worth it for a beta. They'd rather not have EU/CA users at all than carry the compliance load. Offer the user the explicit choice:
+
+> *"Two paths for handling EU + California users:*
+>
+> *(a) **Comply** &mdash; Privacy Policy written to GDPR + CCPA standard, signup-flow consent checkboxes, data export/delete endpoints, sub-processor DPAs. About 30 minutes of work for me, then it's done. Recommended for any project that wants international reach.*
+>
+> *(b) **Block by IP** &mdash; Add an edge middleware that returns a 451 ('Unavailable for Legal Reasons') page to requests from EU + California IPs, with a polite explanation. You don't have GDPR/CCPA obligations because you don't serve those markets. Lower compliance burden but you're permanently locked out of those users.*
+>
+> *Most MVPs pick (a). Founders pick (b) when the audience is clearly US-only (e.g., a tool for US accountants, a marketplace for US-based services), the data is sensitive enough that compliance feels risky, or the team can't take on the operational burden. Which fits?"*
+
+If the user picks (b), drop in this Vercel Edge Middleware that checks `x-vercel-ip-country` against an allowlist:
+
+```ts
+// middleware.ts (Next.js Edge Middleware)
+import { NextResponse, type NextRequest } from 'next/server';
+
+const BLOCKED_COUNTRIES = new Set(['GB', 'IE', 'DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'SE', 'DK', 'FI', 'PT', 'AT', 'PL', 'CZ', 'GR', 'HU', 'RO', 'BG', 'HR', 'CY', 'EE', 'LV', 'LT', 'LU', 'MT', 'SI', 'SK']);
+const BLOCKED_REGIONS_US = new Set(['CA']);
+
+export function middleware(req: NextRequest) {
+  const country = req.headers.get('x-vercel-ip-country') ?? '';
+  const region = req.headers.get('x-vercel-ip-country-region') ?? '';
+  if (BLOCKED_COUNTRIES.has(country) || (country === 'US' && BLOCKED_REGIONS_US.has(region))) {
+    return new NextResponse(
+      `<!doctype html><meta charset=utf-8><title>Unavailable</title><style>body{font:16px system-ui;max-width:36rem;margin:5rem auto;padding:0 1.5rem;line-height:1.6}</style><h1>Sorry — we're not available in your region</h1><p>We're a small team building an early product. To stay focused, we currently serve only customers outside the EU and California. We'll let you know if that changes.</p>`,
+      { status: 451, headers: { 'Content-Type': 'text/html; charset=utf-8' } },
+    );
+  }
+  return NextResponse.next();
+}
+export const config = { matcher: ['/((?!_next/static|_next/image|favicon|api/health).*)'] };
+```
+
+Tell the user out loud:
+
+> *"This isn't a perfect solution &mdash; VPN users get through, and you might block legitimate US travelers in the EU. But it's a reasonable first line for an MVP that just doesn't want the compliance burden. You can flip this off any time by deleting the middleware."*
 
 ## DIALOGUE — gather the inputs the user owns
 
@@ -124,9 +198,9 @@ Date-stamp the bottom of each page. Keep a `# Changelog` section.
 
 **Disclaimer to the user:** these are drafted for beta and are not a substitute for a lawyer. Tell the user this out loud. Suggest a ~$500 legal review (e.g., TermsFeed / Iubenda templates reviewed by a real attorney, or a Clerky/LegalZoom lawyer for a fixed fee) before the product gets past beta or takes money.
 
-### 2. Signup-flow consent checkboxes
+### 2. Signup-flow consent checkboxes (spec for sub-skill 04)
 
-Modify the signup form built in sub-skill 03. Add:
+The signup form doesn't exist yet &mdash; sub-skill 04 will build it. Drop the markup snippet below into `PROJECT.md` under `# Compliance` so sub-skill 04 picks it up verbatim:
 
 ```tsx
 <label className="label cursor-pointer justify-start gap-2">
@@ -206,5 +280,8 @@ If you added non-essential cookies (analytics, marketing pixels), show a cookie 
 - `/account/data` supports export and delete for authenticated users.
 - The privacy contact email the user provided is reachable and monitored.
 - A `# Compliance` section in `PROJECT.md` lists the regulations covered, the sub-processors with signed DPAs, and a note recommending a legal review before general availability.
+- The vertical classification is recorded in `STATE.yaml # Decisions` along with the frameworks the agent surfaced.
+- For projects in regulated verticals (HIPAA / FERPA / GLBA), the user has explicitly acknowledged the framework and chosen one of: implement now / pivot scope / defer with risk noted.
+- Geographic compliance choice is recorded: (a) comply or (b) block. If (b), the IP-block middleware is committed.
 
-Move on to `09-accessibility.md`.
+Move on to `04-auth.md`.

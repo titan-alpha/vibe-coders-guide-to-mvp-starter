@@ -1,16 +1,25 @@
-# 07 · Monetization
+# 09 · Monetization
 
-Goal: pick the right way for the product to make money &mdash; or skip monetization entirely if the user wants to prioritize reach. Two patterns cover ~95% of MVPs: **ad revenue** (AdSense) and **direct payment** (Stripe). The agent helps the user pick, walks them through getting credentials, and wires it up.
+Goal: pick the right way for the product to make money &mdash; or skip monetization entirely if the access model is free beta and the user wants to prioritize reach. Three patterns cover ~95% of MVPs: **free beta** (no payment yet), **ad revenue** (AdSense), and **direct payment** (Stripe). The agent helps the user pick, walks them through getting credentials, and wires it up.
 
-## DIALOGUE — does the product want monetization at MVP stage?
+## DIALOGUE — confirm the beta tier
 
-Many MVPs ship without monetization to focus on user acquisition. Ask, in plain language:
+Look up the access model from `PROJECT.md # Decisions` (set in sub-skill 01). Reaffirm:
 
-> *"Do you want to make money from this MVP at launch, or wait until you have users? Both are valid. Charging early proves people will actually pay; waiting prioritizes growth so you have someone to charge later."*
+| Access model from sub-skill 01 | What this sub-skill does |
+| --- | --- |
+| **Free beta with waitlist** | Skip monetization unless the user *also* wants ads on a content surface. Confirm and exit. |
+| **Open signup**, founder wants growth first | Offer the AdSense path (passive revenue, no payment friction) or skip entirely. |
+| **Open signup**, founder wants paid revenue from day 1 | Stripe path (subscription or one-time). |
+| **Paid beta** | **Stripe path is required.** Subscription gating is wired into the auth allowlist from sub-skill 04. |
 
-If the user wants to wait, skip and move on to `08-compliance.md`.
+> *"Your access mode is `<X>`. Based on that I'd suggest **`<path>`**. Want to set that up now? You can open `localhost:3000` in a browser and watch as we wire it in."*
 
-If they want monetization, recommend a path based on the product (use the simplest one that fits, per the operating rule in `SKILL.md`):
+For free beta, exit politely:
+
+> *"Free beta — no monetization to wire up. We'll revisit when you're ready to charge. Note in `PROJECT.md` that monetization is deferred."*
+
+For everything else, pick the right sub-path:
 
 | Product type | Recommended monetization | Why |
 | --- | --- | --- |
@@ -18,10 +27,9 @@ If they want monetization, recommend a path based on the product (use the simple
 | SaaS / utility with paid features or premium tiers | **Stripe Checkout** | Battle-tested, hosted payment page (no PCI scope) |
 | Marketplace (platform takes a cut) | **Stripe Connect** | Splits payments between you and sellers automatically |
 | Free-to-use community | **AdSense** initially; add Stripe for premium features later | Ads cover hosting; charge for power features when traction proves it |
+| **Paid beta** (any product type) | **Stripe Checkout in `subscription` mode**, gated against the auth allowlist | Users pay first, then access; admin sees subscription status in dashboard |
 
-> *"For your product I'd suggest **\<path\>** because **\<reason in one line\>**. Want to set that up now? You can open `localhost:3000` in a browser and watch as we wire it in."*
-
-Defer to the user if they prefer the other path. Both are documented below.
+Defer to the user if they prefer a different path than the suggestion. All paths are documented below.
 
 ---
 
@@ -176,7 +184,52 @@ export async function POST(req: Request) {
 }
 ```
 
-Create `Price` objects (and the `Product` they belong to) in the Stripe dashboard &rarr; Products. Each Price has an ID like `price_1Q...`. Store them as env vars or in a config map keyed by SKU.
+### B.3.1 Create the products and prices via the Stripe API (don't make the user click)
+
+Stripe has a clean REST API for creating products and prices. Don't make the user click through the dashboard — have a short DIALOGUE about the plan structure, then create them programmatically.
+
+> *"What plan(s) should I create in Stripe? Common shapes:*
+> - *Single subscription tier ('Pro' at $X/mo).*
+> - *Two tiers ('Starter' $X/mo, 'Pro' $Y/mo).*
+> - *Free + Pro (free tier + paid subscription).*
+> - *One-time purchase ($X once).*
+>
+> *For each tier, give me a name, a price, and the billing cadence (monthly / yearly / one-time). I'll create them in Stripe and store the price IDs in `.env.local`."*
+
+Then run a one-shot script the agent generates from the user's answers (do NOT commit a build-time call):
+
+```ts
+// scripts/stripe-bootstrap.ts — run once: `npx tsx scripts/stripe-bootstrap.ts`
+import 'dotenv/config';
+import Stripe from 'stripe';
+import { writeFileSync, appendFileSync } from 'node:fs';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-12-18.acacia' });
+
+const PLANS = [
+  { name: 'Pro',     amountCents: 2000, interval: 'month' as const, lookupKey: 'pro_monthly' },
+  // add more entries from the user's answers
+];
+
+(async () => {
+  for (const plan of PLANS) {
+    const product = await stripe.products.create({ name: plan.name });
+    const price = await stripe.prices.create({
+      product: product.id,
+      unit_amount: plan.amountCents,
+      currency: 'usd',
+      recurring: plan.interval === 'one_time' ? undefined : { interval: plan.interval },
+      lookup_key: plan.lookupKey,
+    });
+    appendFileSync('.env.local', `\nSTRIPE_PRICE_${plan.lookupKey.toUpperCase()}=${price.id}`);
+    console.log(`Created ${plan.name}: ${price.id}`);
+  }
+})();
+```
+
+After it runs, the user has new env vars like `STRIPE_PRICE_PRO_MONTHLY=price_1Q...`. The Checkout call references them via `process.env.STRIPE_PRICE_PRO_MONTHLY`.
+
+If the user later changes a price, create a *new* Price (Stripe prices are immutable) and update the env var — never edit the old one.
 
 ### B.4 Webhook for fulfillment
 
@@ -235,6 +288,37 @@ Suggest: *"Open `localhost:3000` and walk through a purchase with me. Use card `
 
 The flow should: click "Buy" &rarr; Stripe Checkout opens &rarr; pay with test card &rarr; redirect back to `/success` &rarr; webhook fires &rarr; access granted in your DB.
 
+### B.5.5 Paid beta — gate the auth allowlist on subscription state
+
+If `ACCESS_MODE === 'paid'` (sub-skill 01 access model), the webhook is responsible for **inserting into `allowedEmails`** when a subscription becomes active and **deleting from `allowedEmails` (or marking `users.deactivatedAt`)** when a subscription cancels or fails to pay.
+
+```ts
+// inside the webhook switch
+case 'checkout.session.completed': {
+  const session = event.data.object;
+  const email = session.customer_details?.email?.toLowerCase();
+  if (email) {
+    await db.insert(allowedEmails).values({ email }).onConflictDoNothing();
+    // Optionally also send the invite email here so the user can complete signup.
+  }
+  break;
+}
+case 'customer.subscription.deleted':
+case 'invoice.payment_failed': {
+  const sub = event.data.object;
+  const customer = await stripe.customers.retrieve(sub.customer as string);
+  const email = (customer as Stripe.Customer).email?.toLowerCase();
+  if (email) {
+    // Block future logins; existing sessions die at their next refresh.
+    await db.update(users).set({ deactivatedAt: new Date() }).where(eq(users.email, email));
+    await db.delete(allowedEmails).where(eq(allowedEmails.email, email));
+  }
+  break;
+}
+```
+
+The admin dashboard's Users tab (sub-skill 07) should display each user's subscription status by joining against a `subscriptions` table you populate from the webhook (`userId`, `stripeSubscriptionId`, `status`, `currentPeriodEnd`). One extra column. Useful when the founder wants to see who's actually paying.
+
 ### B.6 Anti-patterns to avoid
 
 - **Building your own card form.** Use Stripe Checkout. PCI compliance is theirs.
@@ -260,4 +344,4 @@ The flow should: click "Buy" &rarr; Stripe Checkout opens &rarr; pay with test c
 - Access granted only after webhook fires &mdash; not on success-page redirect.
 - A `# Monetization` line in `PROJECT.md` records the chosen plan structure (one-time vs subscription, price IDs).
 
-Move on to `08-compliance.md`.
+Move on to `10-accessibility.md`.
